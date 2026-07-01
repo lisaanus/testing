@@ -10,8 +10,6 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import api from "@/lib/axios";
-
 
 ChartJS.register(
   BarElement,
@@ -23,59 +21,47 @@ ChartJS.register(
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-          setError('Token tidak ditemukan');
-          return;
-        }
-  
-        // pakai axios
-        const res = await api.get('/kontraktor/dashboard', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        setData(res.data);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.response?.data?.message || 'Gagal mengambil data dashboard');
-      }
-    };
-  
-    fetchDashboard();
-  }, []);
-  
+    // 🔐 PROTEKSI LOGIN
+    const isLogin = localStorage.getItem("isLogin");
+    if (!isLogin) {
+      window.location.href = "/auth/login";
+      return;
+    }
 
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+    // 📊 DUMMY DATA UNTUK SUS
+    const dummyData = {
+      nama: "User Kontraktor",
+      total_proyek: 5,
+      total_pekerjaan: 12,
+      status_proyek: {
+        berjalan: 3,
+        selesai: 2,
+      },
+      pekerjaan_per_proyek: [
+        { nama_proyek: "Proyek A", total_pekerjaan: 5 },
+        { nama_proyek: "Proyek B", total_pekerjaan: 3 },
+        { nama_proyek: "Proyek C", total_pekerjaan: 4 },
+      ],
+    };
+
+    setData(dummyData);
+  }, []);
+
   if (!data) return <p>Loading...</p>;
 
-  /* =======================
-     DATA AMAN (ANTI ERROR)
-  ======================= */
-  const statusProyek = data.status_proyek ?? {
-    berjalan: 0,
-    selesai: 0,
-  };
+  const statusProyek = data.status_proyek;
+  const pekerjaanPerProyek = data.pekerjaan_per_proyek;
 
-  const pekerjaanPerProyek = data.pekerjaan_per_proyek ?? [];
-
-  /* =======================
-     CHART 1: STATUS PROYEK
-  ======================= */
   const statusChart = {
     labels: ['Berjalan', 'Selesai'],
     datasets: [
       {
         label: 'Jumlah Proyek',
         data: [
-          statusProyek.berjalan ?? 0,
-          statusProyek.selesai ?? 0,
+          statusProyek.berjalan,
+          statusProyek.selesai,
         ],
         backgroundColor: ['#1a73e8', '#34a853'],
         borderRadius: 6,
@@ -83,9 +69,6 @@ export default function DashboardPage() {
     ],
   };
 
-  /* =======================
-     CHART 2: PEKERJAAN / PROYEK
-  ======================= */
   const pekerjaanChart = {
     labels: pekerjaanPerProyek.map((p: any) => p.nama_proyek),
     datasets: [
@@ -105,36 +88,34 @@ export default function DashboardPage() {
         Selamat datang kembali, {data.nama}
       </p>
 
-      {/* ===== SUMMARY ===== */}
       <div className="grid grid-4" style={{ marginBottom: '2rem' }}>
         <div className="summary-card">
           <div className="summary-card-label">Total Proyek</div>
-          <div className="summary-card-value">{data.total_proyek ?? 0}</div>
+          <div className="summary-card-value">{data.total_proyek}</div>
         </div>
 
         <div className="summary-card">
           <div className="summary-card-label">Proyek Berjalan</div>
           <div className="summary-card-value">
-            {statusProyek.berjalan ?? 0}
+            {statusProyek.berjalan}
           </div>
         </div>
 
         <div className="summary-card">
           <div className="summary-card-label">Proyek Selesai</div>
           <div className="summary-card-value">
-            {statusProyek.selesai ?? 0}
+            {statusProyek.selesai}
           </div>
         </div>
 
         <div className="summary-card">
           <div className="summary-card-label">Total Pekerjaan</div>
           <div className="summary-card-value">
-            {data.total_pekerjaan ?? 0}
+            {data.total_pekerjaan}
           </div>
         </div>
       </div>
 
-      {/* ===== CHARTS ===== */}
       <div className="grid grid-2">
         <div className="card">
           <div className="card-header">
@@ -149,23 +130,7 @@ export default function DashboardPage() {
             <div className="card-title">Jumlah Pekerjaan per Proyek</div>
           </div>
 
-          {pekerjaanPerProyek.length === 0 ? (
-            <div
-              style={{
-                height: 300,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ACACAC',
-                background: '#EBECEE',
-                borderRadius: 8,
-              }}
-            >
-              Belum ada data pekerjaan
-            </div>
-          ) : (
-            <Bar data={pekerjaanChart} />
-          )}
+          <Bar data={pekerjaanChart} />
         </div>
       </div>
     </main>

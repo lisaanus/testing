@@ -1,7 +1,5 @@
 'use client';
 
-import api from '@/lib/axios';
-
 export default function TambahSubPekerjaanModal({
   idPekerjaan,
   onClose,
@@ -11,25 +9,28 @@ export default function TambahSubPekerjaanModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const handleSubmit = async (e: any) => {
+
+  const handleSubmit = (e: any) => {
     e.preventDefault();
 
     const form = e.target;
 
-    try {
-      const res = await api.post('/sub-pekerjaan', {
-        id_pekerjaan: idPekerjaan,
-        nama_sub: form.nama_sub.value,
-        tgl_mulai: form.tgl_mulai.value || null,
-      });
-      
-      alert(res.data.message); // ✅ sekarang valid
+    const subBaru = {
+      id: Date.now(),
+      id_pekerjaan: idPekerjaan,
+      nama_sub: form.nama_sub.value,
+      tgl_mulai: form.tgl_mulai.value || null,
+    };
 
-      onSuccess();
-    } catch (err) {
-      console.error(err);
-      alert('Gagal menambahkan sub pekerjaan');
-    }
+    let data = JSON.parse(localStorage.getItem("sub_pekerjaan") || "[]");
+
+    data.push(subBaru);
+
+    localStorage.setItem("sub_pekerjaan", JSON.stringify(data));
+
+    alert("Sub pekerjaan berhasil ditambahkan!");
+
+    onSuccess();
   };
 
   return (
@@ -52,10 +53,12 @@ export default function TambahSubPekerjaanModal({
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button type="button" onClick={onClose}>
               Batal
             </button>
-            <button className="btn btn-primary">Simpan</button>
+            <button type="submit">
+              Simpan
+            </button>
           </div>
         </form>
       </div>

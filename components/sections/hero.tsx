@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { motion, Variants } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import { motion, Variants } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -12,7 +13,7 @@ const containerVariants: Variants = {
       delayChildren: 0.1,
     },
   },
-}
+};
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -24,7 +25,7 @@ const itemVariants: Variants = {
       ease: [0.4, 0, 0.2, 1], // ✅ FIX (BUKAN STRING)
     },
   },
-}
+};
 
 const imageVariants: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 40 },
@@ -38,7 +39,7 @@ const imageVariants: Variants = {
       ease: [0.4, 0, 0.2, 1], // ✅ FIX
     },
   },
-}
+};
 
 export default function HeroSection() {
   return (
@@ -63,19 +64,25 @@ export default function HeroSection() {
                 Pantau Progres Pembangunan Anda Secara Real-Time dan Transparan
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-xl">
-                FinProjek membantu kontraktor melaporkan progres pembangunan dengan cepat, dan memudahkan pemilik
-                bangunan memantau perkembangan proyek secara visual dan terstruktur.
+                FinProjek membantu kontraktor melaporkan progres pembangunan
+                dengan cepat, dan memudahkan pemilik bangunan memantau
+                perkembangan proyek secara visual dan terstruktur.
               </p>
             </motion.div>
 
             {/* CTA Button */}
-            <motion.div className="flex flex-col sm:flex-row gap-4" variants={itemVariants}>
-              <Button
-                size="lg"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base font-semibold rounded-full"
-              >
-                Masuk ke Dashboard
-              </Button>
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4"
+              variants={itemVariants}
+            >
+              <Link href="/auth/login" passHref legacyBehavior>
+                <Button
+                  size="lg"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base font-semibold rounded-full"
+                >
+                  Masuk ke Dashboard
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
 
@@ -95,5 +102,5 @@ export default function HeroSection() {
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

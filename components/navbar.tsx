@@ -84,7 +84,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/auth/register"
+            href="/auth/kontraktor/dashboard/page"
             style={{
               padding: '8px 16px',
               fontSize: '14px',

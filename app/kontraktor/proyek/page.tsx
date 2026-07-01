@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import api from '@/lib/axios';
 import TambahProyekModal from './TambahProyek';
 import EditProyekModal from './EditProyek';
 import { useRouter } from 'next/navigation';
@@ -12,163 +11,150 @@ export default function ProyekPage() {
   const [editId, setEditId] = useState<number | null>(null);
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<any>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
 
   /* =========================
-     FETCH PROYEK
+     LOAD DATA
   ========================== */
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-
-    api
-      .get('/proyek') // ⬅️ interceptor otomatis pasang Authorization
-      .then(res => {
-        setProjects(res.data.data ?? res.data);
-      })
-      .catch(err => {
-        console.error('Gagal ambil proyek:', err.response?.data || err);
-      });
-  }, []);
-
-  /* =========================
-     UTILS
-  ========================== */
-  const copyKode = async (kode: string) => {
-    try {
-      await navigator.clipboard.writeText(kode);
-      alert(`Kode proyek "${kode}" berhasil disalin`);
-    } catch {
-      alert('Gagal menyalin kode');
-    }
+  const loadData = () => {
+    const data = JSON.parse(localStorage.getItem("proyek") || "[]");
+    setProjects(data);
   };
 
-  const getMenuPosition = (rect: DOMRect) => {
-    const MENU_WIDTH = 150;
-    const GAP = 8;
-    const screenWidth = window.innerWidth;
+  useEffect(() => {
+    const isLogin = localStorage.getItem("isLogin");
+    if (!isLogin) {
+      router.push('/auth/login');
+      return;
+    }
 
-    let x = rect.right + GAP;
-    if (x + MENU_WIDTH > screenWidth) {
-      x = rect.left - MENU_WIDTH - GAP;
+    loadData();
+  }, [router]);
+
+  /* =========================
+     COPY
+  ========================== */
+  const copyKode = async (kode: string) => {
+    await navigator.clipboard.writeText(kode);
+    alert(`Kode ${kode} disalin`);
+  };
+
+  /* =========================
+     DELETE
+  ========================== */
+  const handleDelete = (id: number) => {
+    if (!confirm('Yakin hapus proyek?')) return;
+
+    let data = JSON.parse(localStorage.getItem("proyek") || "[]");
+
+    data = data.filter((p: any) => p.id_proyek !== id);
+
+    localStorage.setItem("proyek", JSON.stringify(data));
+
+    setProjects(data);
+    setOpenMenuId(null);
+  };
+
+  /* =========================
+     MENU
+  ========================== */
+  const getMenuPosition = (rect: DOMRect) => {
+    const WIDTH = 150;
+    let x = rect.right + 8;
+
+    if (x + WIDTH > window.innerWidth) {
+      x = rect.left - WIDTH - 8;
     }
 
     return { x, y: rect.top };
   };
 
-  /* =========================
-     DELETE PROYEK
-  ========================== */
-  const handleDelete = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus proyek ini?')) return;
-
-    try {
-      await api.delete(`/proyek/${id}`); // ⬅️ interceptor handle token
-      setProjects(prev => prev.filter(p => p.id_proyek !== id));
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Proyek gagal dihapus');
-    }
-  };
-
-  /* =========================
-     CLOSE MENU OUTSIDE
-  ========================== */
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
-    };
-
-    if (openMenuId !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openMenuId]);
-
   return (
     <main className="main-content">
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1>Manajemen Proyek</h1>
-          <p style={{ color: '#777' }}>Daftar proyek yang sedang kamu kelola</p>
-        </div>
+      <h1>Manajemen Proyek</h1>
 
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          + Tambah Proyek
-        </button>
-      </div>
+      <button onClick={() => setShowModal(true)}>
+        + Tambah Proyek
+      </button>
 
-      {/* TABLE */}
-      <div className="card">
-        <table className="modern-table">
-          <thead>
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Kode</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {projects.length === 0 ? (
             <tr>
-              <th>Nama</th>
-              <th>Kode</th>
-              <th>Status</th>
-              <th>Aksi</th>
+              <td colSpan={4}>Belum ada proyek</td>
             </tr>
-          </thead>
+          ) : (
+            projects.map(p => (
+              <tr key={p.id_proyek}>
+                <td>{p.nama_proyek}</td>
 
-          <tbody>
-            {projects.length === 0 ? (
-              <tr>
-                <td colSpan={4} style={{ textAlign: 'center' }}>
-                  Belum ada proyek
+                <td>
+                  {p.kode_proyek}
+                  <button onClick={() => copyKode(p.kode_proyek)}>
+                    📋
+                  </button>
+                </td>
+
+                <td>{p.status}</td>
+
+                <td>
+                  <button
+                    onClick={e => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setMenuPos(getMenuPosition(rect));
+                      setOpenMenuId(p.id_proyek);
+                    }}
+                  >
+                    ⋮
+                  </button>
                 </td>
               </tr>
-            ) : (
-              projects.map(p => (
-                <tr key={p.id_proyek}>
-                  <td>{p.nama_proyek}</td>
-                  <td>
-                    <code>{p.kode_proyek}</code>
-                    <button onClick={() => copyKode(p.kode_proyek)}>📋</button>
-                  </td>
-                  <td>{p.status}</td>
-                  <td>
-                    <button
-                      onClick={e => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setMenuPos(getMenuPosition(rect));
-                        setOpenMenuId(p.id_proyek);
-                      }}
-                    >
-                      ⋮
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))
+          )}
+        </tbody>
+      </table>
 
-      {/* DROPDOWN */}
+      {/* MENU */}
       {openMenuId && menuPos && (
-        <div
-          ref={menuRef}
-          className="dropdown-menu popup"
-          style={{ top: menuPos.y, left: menuPos.x }}
-        >
+        <div ref={menuRef} style={{ position: 'fixed', top: menuPos.y, left: menuPos.x }}>
           <button onClick={() => router.push(`/kontraktor/proyek/detail/${openMenuId}`)}>
             Detail
           </button>
           <button onClick={() => setEditId(openMenuId)}>Edit</button>
-          <button className="danger" onClick={() => handleDelete(openMenuId)}>
+          <button onClick={() => handleDelete(openMenuId)}>
             Hapus
           </button>
         </div>
       )}
 
-      {showModal && <TambahProyekModal onClose={() => setShowModal(false)} />}
-      {editId && <EditProyekModal id={editId} onClose={() => setEditId(null)} />}
+      {showModal && (
+        <TambahProyekModal onClose={() => {
+          setShowModal(false);
+          loadData();
+        }} />
+      )}
+
+      {editId && (
+        <EditProyekModal
+          id={editId}
+          onClose={() => {
+            setEditId(null);
+            loadData();
+          }}
+        />
+      )}
     </main>
   );
 }
