@@ -68,7 +68,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* ACTION BUTTON */}
+        {/* ACTION BUTTON (Hanya Login) */}
         <div className="hidden md:flex" style={{ gap: '12px' }}>
           <Link
             href="/auth/login"
@@ -81,17 +81,6 @@ export default function Navbar() {
             }}
           >
             Login
-          </Link>
-
-          <Link
-            href="/auth/kontraktor/dashboard/page"
-            style={{
-              padding: '8px 16px',
-              fontSize: '14px',
-              borderRadius: '6px',
-              background: '#2563eb',
-              color: '#fff',
-            }}
           </Link>
         </div>
 
@@ -136,7 +125,15 @@ export default function Navbar() {
 
             <hr />
 
-            <Link href="/auth/login">Login</Link>
+            <Link 
+              href="/auth/login"
+              style={{
+                fontSize: '14px',
+                color: '#374151',
+              }}
+            >
+              Login
+            </Link>
           </div>
         </div>
       )}
