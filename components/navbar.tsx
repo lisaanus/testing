@@ -92,8 +92,6 @@ export default function Navbar() {
               background: '#2563eb',
               color: '#fff',
             }}
-          >
-            Register
           </Link>
         </div>
 
@@ -139,7 +137,6 @@ export default function Navbar() {
             <hr />
 
             <Link href="/auth/login">Login</Link>
-            <Link href="/auth/register">Register</Link>
           </div>
         </div>
       )}
